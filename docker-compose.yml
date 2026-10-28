@@ -1,0 +1,15 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: j_gastronomia_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: bd_gastronomia_nosql
+    volumes:
+      - mongo_gastronomia_data:/data/db
+
+volumes:
+  mongo_gastronomia_data:
+    driver: local

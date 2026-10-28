@@ -1,0 +1,740 @@
+{
+  "info": {
+    "_postman_id": "c1f7a8b9-4d2e-4b6a-9f1a-8e7c9b0a1f2e",
+    "name": "API REST Gastronomia CGDSS - SENA",
+    "description": "Colección completa de pruebas para la API REST de la Unidad Productiva de Gastronomía (FastAPI + MongoDB). Incluye autenticación Bearer JWT automática, CRUDs de todas las colecciones, cálculo de costos de producción, control de existencias, reportes estadísticos y reglas de negocio RN01 a RN06.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_cajero",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_cocinero",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_producto_ejemplo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_pedido_ejemplo",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Autenticación (RF01)",
+      "item": [
+        {
+          "name": "Login - ADMIN (Guarda token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_admin\", jsonData.access_token);",
+                  "pm.test(\"Token JWT recibido y rol ADMIN\", function () {",
+                  "    pm.expect(jsonData.rol).to.eql(\"ADMIN\");",
+                  "    pm.expect(jsonData.access_token).to.be.a('string');",
+                  "});",
+                  "pm.test(\"RN06: Contraseña no expuesta\", function () {",
+                  "    pm.expect(jsonData.usuario.password).to.be.undefined;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@gastronomia.sena.edu.co\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - CAJERO (Guarda token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_cajero\", jsonData.access_token);",
+                  "pm.test(\"Rol CAJERO validado\", function () {",
+                  "    pm.expect(jsonData.rol).to.eql(\"CAJERO\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"cajero1@gastronomia.sena.edu.co\",\n  \"password\": \"cajero123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - COCINERO (Guarda token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_cocinero\", jsonData.access_token);",
+                  "pm.test(\"Rol COCINERO validado\", function () {",
+                  "    pm.expect(jsonData.rol).to.eql(\"COCINERO\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"cocinero1@gastronomia.sena.edu.co\",\n  \"password\": \"cocinero123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Perfil (Token Bearer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/perfil",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "perfil"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Usuarios (RF02 - Solo ADMIN)",
+      "item": [
+        {
+          "name": "Listar Usuarios (ADMIN - 200)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Listar Usuarios como CAJERO (RBAC - Debe dar 403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["usuarios"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Categorías (RF03)",
+      "item": [
+        {
+          "name": "Listar Categorías (Consulta todos)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/categorias",
+              "host": ["{{base_url}}"],
+              "path": ["categorias"]
+            }
+          }
+        },
+        {
+          "name": "Crear Categoría (ADMIN)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bebidas Frías Especiales\",\n  \"descripcion\": \"Granizados y frappés de café\",\n  \"estado\": \"ACTIVO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/categorias",
+              "host": ["{{base_url}}"],
+              "path": ["categorias"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Productos y Costo/Margen (RF04, RF05, RF06)",
+      "item": [
+        {
+          "name": "Listar Productos (Captura ID de ejemplo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var items = pm.response.json();",
+                  "if (items.length > 0) {",
+                  "    pm.collectionVariables.set(\"id_producto_ejemplo\", items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/productos",
+              "host": ["{{base_url}}"],
+              "path": ["productos"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Receta de un Producto (RF05)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cocinero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/productos/{{id_producto_ejemplo}}/receta",
+              "host": ["{{base_url}}"],
+              "path": ["productos", "{{id_producto_ejemplo}}", "receta"]
+            }
+          }
+        },
+        {
+          "name": "Calcular Costo y Margen de Producto (RF06)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Verifica cálculo de margen = precio_venta - costo_produccion\", function () {",
+                  "    var margenEsperado = Number((data.precio_venta - data.costo_produccion).toFixed(2));",
+                  "    pm.expect(data.margen_ganancia).to.eql(margenEsperado);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cocinero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/productos/{{id_producto_ejemplo}}/costo",
+              "host": ["{{base_url}}"],
+              "path": ["productos", "{{id_producto_ejemplo}}", "costo"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Insumos e Inventario (RF07)",
+      "item": [
+        {
+          "name": "Listar Insumos (ADMIN, COCINERO)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cocinero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/insumos",
+              "host": ["{{base_url}}"],
+              "path": ["insumos"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Insumos con Stock Bajo (RF07)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cocinero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/insumos/stock-bajo",
+              "host": ["{{base_url}}"],
+              "path": ["insumos", "stock-bajo"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Insumos por Vencer (RF07)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cocinero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/insumos/por-vencer?dias=15",
+              "host": ["{{base_url}}"],
+              "path": ["insumos", "por-vencer"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "15"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Compras y Regla RN02 (RF08)",
+      "item": [
+        {
+          "name": "Listar Compras Realizadas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/compras",
+              "host": ["{{base_url}}"],
+              "path": ["compras"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Clientes (RF09)",
+      "item": [
+        {
+          "name": "Listar Clientes (ADMIN, CAJERO)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clientes",
+              "host": ["{{base_url}}"],
+              "path": ["clientes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Pedidos y Reglas RN01, RN03, RN05 (RF10)",
+      "item": [
+        {
+          "name": "Listar Pedidos (Captura ID ejemplo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var list = pm.response.json();",
+                  "if (list.length > 0) {",
+                  "    pm.collectionVariables.set(\"id_pedido_ejemplo\", list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pedidos",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Pedidos por Estado PENDIENTE",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cocinero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pedidos/estado/PENDIENTE",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos", "estado", "PENDIENTE"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09. Calificaciones en MongoDB (RF12)",
+      "item": [
+        {
+          "name": "Listar Calificaciones de Clientes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/calificaciones",
+              "host": ["{{base_url}}"],
+              "path": ["calificaciones"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Calificaciones y Promedio de un Producto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/calificaciones/producto/{{id_producto_ejemplo}}",
+              "host": ["{{base_url}}"],
+              "path": ["calificaciones", "producto", "{{id_producto_ejemplo}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Reportes Estadísticos (RF11 - Solo ADMIN)",
+      "item": [
+        {
+          "name": "Reporte de Ventas por Rango de Fechas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reportes/ventas?desde=2026-10-01&hasta=2026-10-31",
+              "host": ["{{base_url}}"],
+              "path": ["reportes", "ventas"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-10-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ranking de Productos Más Vendidos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reportes/productos-mas-vendidos?limite=5",
+              "host": ["{{base_url}}"],
+              "path": ["reportes", "productos-mas-vendidos"],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
